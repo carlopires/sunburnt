@@ -9,8 +9,8 @@ import warnings
 from lxml.builder import E
 import lxml.etree
 
-from .dates import datetime_from_w3_datestring
-from .strings import RawString, SolrString, WildcardString
+from ..dates import datetime_from_w3_datestring
+from ..strings import RawString, SolrString, WildcardString
 
 try:
     import pytz
