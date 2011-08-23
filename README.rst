@@ -23,7 +23,7 @@ Dependencies
 - Requirements:
 
   * `httplib2 <http://code.google.com/p/httplib2/>`_
-  * `lxml <http://lxml.de>`_
+  * `lxml <http://lxml.de>`_ or ElementTree (in standard library since Python 2.5)
 
 - Strongly recommended:
 
@@ -35,7 +35,7 @@ Dependencies
     be used if present, otherwise sunburnt will fall back to Python
     datetime objects.
 
-  * `pytz <http://pytz.sourceforge.net>`_
+  * `pytz <http://pytz.sourceforge.net>`_ or `gaepytz <http://code.google.com/p/gae-pytz/>`_
 
     If you're using native Python datetime objects with Solr (rather than
     mx.DateTime objects) you should also have pytz installed to guarantee
