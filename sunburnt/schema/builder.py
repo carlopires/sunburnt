@@ -44,32 +44,32 @@ The ``E`` Element factory for generating XML documents.
 import xml.etree.ElementTree as ET
 
 try:
-    from functools import partial
+	from functools import partial
 except ImportError:
-    # fake it for pre-2.5 releases
-    def partial(func, tag):
-        return lambda *args, **kwargs: func(tag, *args, **kwargs)
+	# fake it for pre-2.5 releases
+	def partial(func, tag):
+		return lambda *args, **kwargs: func(tag, *args, **kwargs)
 
 try:
-    callable
+	callable
 except NameError:
-    # Python 3
-    def callable(f):
-        return hasattr(f, '__call__')
+	# Python 3
+	def callable(f):
+		return hasattr(f, '__call__')
 
 try:
-    basestring = __builtins__["basestring"]
+	basestring = __builtins__["basestring"]
 except (NameError, KeyError):
-    basestring = str
+	basestring = str
 
 try:
-    unicode = __builtins__["unicode"]
+	unicode = __builtins__["unicode"]
 except (NameError, KeyError):
-    unicode = str
+	unicode = str
 
 
 class ElementMaker(object):
-    """Element generator factory.
+	"""Element generator factory.
 
 Unlike the ordinary Element factory, the E factory allows you to pass in
 more than just a tag and some optional attributes; you can also pass in
@@ -157,80 +157,85 @@ and/or a specific target ``namespace`` to the ElementMaker class::
 <p:test xmlns:p="http://my.ns/"/>
 """
 
-    def __init__(self, typemap=None,
-                 namespace=None, nsmap=None, makeelement=None):
-        if namespace is not None:
-            self._namespace = '{' + namespace + '}'
-        else:
-            self._namespace = None
+	def __init__(self, typemap=None,
+				 namespace=None, nsmap=None, makeelement=None):
+		if namespace is not None:
+			self._namespace = '{' + namespace + '}'
+		else:
+			self._namespace = None
 
-        if nsmap:
-            self._nsmap = dict(nsmap)
-        else:
-            self._nsmap = None
+		if nsmap:
+			self._nsmap = dict(nsmap)
+		else:
+			self._nsmap = None
 
-        if makeelement is not None:
-            assert callable(makeelement)
-            self._makeelement = makeelement
-        else:
-            self._makeelement = ET.Element
+		if makeelement is not None:
+			assert callable(makeelement)
+			self._makeelement = makeelement
+		else:
+			self._makeelement = ET.Element
 
-        # initialize type map for this element factory
+		# initialize type map for this element factory
 
-        if typemap:
-            typemap = typemap.copy()
-        else:
-            typemap = {}
-        
-        def add_text(elem, item):
-            if len(elem):
-                elem[-1].tail = (elem[-1].tail or "") + item
-            else:
-                elem.text = (elem.text or "") + item
-        if str not in typemap:
-            typemap[str] = add_text
-        if unicode not in typemap:
-            typemap[unicode] = add_text
+		if typemap:
+			typemap = typemap.copy()
+		else:
+			typemap = {}
+		
+		def add_text(elem, item):
+			if len(elem):
+				elem[-1].tail = (elem[-1].tail or "") + item
+			else:
+				elem.text = (elem.text or "") + item
+		if str not in typemap:
+			typemap[str] = add_text
+		if unicode not in typemap:
+			typemap[unicode] = add_text
 
-        def add_dict(elem, item):
-            attrib = elem.attrib
-            for k, v in item.items():
-                if isinstance(v, basestring):
-                    attrib[k] = v
-                else:
-                    attrib[k] = typemap[type(v)](None, v)
-        if dict not in typemap:
-            typemap[dict] = add_dict
+		def add_dict(elem, item):
+			attrib = elem.attrib
+			for k, v in item.items():
+				if isinstance(v, basestring):
+					attrib[k] = v
+				else:
+					attrib[k] = typemap[type(v)](None, v)
+		if dict not in typemap:
+			typemap[dict] = add_dict
 
-        self._typemap = typemap
+		self._typemap = typemap
 
-    def __call__(self, tag, *children, **attrib):
-        get = self._typemap.get
+	def __call__(self, tag, *children, **attrib):
+		get = self._typemap.get
 
-        if self._namespace is not None and tag[0] != '{':
-            tag = self._namespace + tag
-        elem = self._makeelement(tag, nsmap=self._nsmap)
-        if attrib:
-            get(dict)(elem, attrib)
+		if self._namespace is not None and tag[0] != '{':
+			tag = self._namespace + tag
+		
+		if self._nsmap:
+			elem = self._makeelement(tag, nsmap=self._nsmap)
+		else:
+			elem = self._makeelement(tag)
+			
+		if attrib:
+			get(dict)(elem, attrib)
 
-        for item in children:
-            if callable(item):
-                item = item()
-            t = get(type(item))
-            if t is None:
-                if ET.iselement(item):
-                    elem.append(item)
-                    continue
-                raise TypeError("bad argument type: %r" % item)
-            else:
-                v = t(elem, item)
-                if v:
-                    get(type(v))(elem, v)
+		for item in children:
+			if callable(item):
+				item = item()
+			t = get(type(item))
+			if t is None:
+				if ET.iselement(item):
+					elem.append(item)
+					continue
+				raise TypeError("bad argument type: %r" % item)
+			else:
+				v = t(elem, item)
+				if v:
+					get(type(v))(elem, v)
 
-        return elem
+		return elem
 
-    def __getattr__(self, tag):
-        return partial(self, tag)
+	def __getattr__(self, tag):
+		return partial(self, tag)
 
 # create factory object
 E = ElementMaker()
